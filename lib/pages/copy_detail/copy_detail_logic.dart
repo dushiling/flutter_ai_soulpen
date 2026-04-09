@@ -16,7 +16,12 @@ class CopyDetailLogic extends GetxController {
   void onInit() {
     super.onInit();
     final args = (Get.arguments as Map?) ?? {};
-    state.update((s) => s?.model = CopyModel.fromJson(args));
+    final model = CopyModel.fromJson(args);
+    // 检查该文案是否已被收藏
+    final favorites = HiveUtil.getFavorites();
+    final isFavorite = favorites.any((e) => e.content == model.content);
+    model.isFavorite = isFavorite;
+    state.update((s) => s?.model = model);
   }
 
   Future<void> copyText() async {
@@ -33,6 +38,7 @@ class CopyDetailLogic extends GetxController {
     final exist = list.any((e) => e.content == m.content);
     if (exist) {
       list.removeWhere((e) => e.content == m.content);
+      m.isFavorite = false;
       ToastUtil.show('已取消收藏');
     } else {
       list.insert(0, m..isFavorite = true);
